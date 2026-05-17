@@ -16,113 +16,95 @@
 </head>
 <body>
   <div id="root"></div>
-  
-  <!-- Dependencies -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // ═══ SUPABASE CLIENT ═══
     const SUPABASE_URL = "https://wjcmchauuweuivawwvzu.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqY21jaGF1dXdldWl2YXd3dnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyODI0MjUsImV4cCI6MjA5Mzg1ODQyNX0.nUdb7g46RsrYHVhxRhqtDfLPmxf7jm709eszOif5NbM";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Table mapping: storage key -> supabase table + field transformations  
     const TABLE_MAP = {
-      "barbershop:barbers": { table: "barbers", toRow: (d) => ({ name: d.name, phone: d.phone || "", instagram: d.instagram || "", color: d.color || "#D4A053", avatar: d.avatar || "", avatar_id: d.avatarId || "", schedule: d.schedule || "", blocked_hours: d.blockedHours || "", commission: d.commission || 0, specialties: d.specialties || [] }), fromRow: (r) => ({ id: r.id, name: r.name, phone: r.phone, instagram: r.instagram, color: r.color, avatar: r.avatar, avatarId: r.avatar_id, schedule: r.schedule, blockedHours: r.blocked_hours, commission: r.commission, specialties: r.specialties || [] }) },
-      "barbershop:services": { table: "services", toRow: (d) => ({ name: d.name, price: d.price, duration: d.duration, icon: d.icon || "✂️", color: d.color || "#D4A053", category: d.category || "popular" }), fromRow: (r) => ({ id: r.id, name: r.name, price: r.price, duration: r.duration, icon: r.icon, color: r.color, category: r.category }) },
-      "barbershop:clients": { table: "clients", toRow: (d) => ({ name: d.name, phone: d.phone, instagram: d.instagram || "", notes: d.notes || "" }), fromRow: (r) => ({ id: r.id, name: r.name, phone: r.phone, instagram: r.instagram, notes: r.notes }) },
-      "barbershop:appointments": { table: "appointments", toRow: (d) => ({ client_id: d.clientId, barber_id: d.barberId, service_id: d.serviceId, date: d.date, time: d.time, duration: d.duration || 30, status: d.status || "pending", pay_method: d.payMethod || null }), fromRow: (r) => ({ id: r.id, clientId: r.client_id, barberId: r.barber_id, serviceId: r.service_id, date: r.date, time: r.time, duration: r.duration, status: r.status, payMethod: r.pay_method }) },
-      "barbershop:quickServices": { table: "quick_services", toRow: (d) => ({ name: d.name, price: d.price, barber_id: d.barberId || null, barber_name: d.barberName || "", date: d.date, time: d.time || "" }), fromRow: (r) => ({ id: r.id, name: r.name, price: r.price, barberId: r.barber_id, barberName: r.barber_name, date: r.date, time: r.time }) },
-      "barbershop:products": { table: "products", toRow: (d) => ({ name: d.name, price: d.price, category: d.category || "bebidas", icon: d.icon || "🛒" }), fromRow: (r) => ({ id: r.id, name: r.name, price: r.price, category: r.category, icon: r.icon }) },
-      "barbershop:sales": { table: "sales", toRow: (d) => ({ product_id: d.productId || null, product_name: d.productName, price: d.price, total: d.total || d.price, qty: d.qty || 1, date: d.date, time: d.time || "" }), fromRow: (r) => ({ id: r.id, productId: r.product_id, productName: r.product_name, price: r.price, total: r.total, qty: r.qty, date: r.date, time: r.time }) },
+      "barbershop:barbers": { table: "barbers", toRow: function(d) { return { name: d.name, phone: d.phone || "", instagram: d.instagram || "", color: d.color || "#D4A053", avatar: d.avatar || "", avatar_id: d.avatarId || "", schedule: d.schedule || "", blocked_hours: d.blockedHours || "", commission: d.commission || 0, specialties: d.specialties || [] }; }, fromRow: function(r) { return { id: r.id, name: r.name, phone: r.phone, instagram: r.instagram, color: r.color, avatar: r.avatar, avatarId: r.avatar_id, schedule: r.schedule, blockedHours: r.blocked_hours, commission: r.commission, specialties: r.specialties || [] }; } },
+      "barbershop:services": { table: "services", toRow: function(d) { return { name: d.name, price: d.price, duration: d.duration, icon: d.icon || "", color: d.color || "#D4A053", category: d.category || "popular" }; }, fromRow: function(r) { return { id: r.id, name: r.name, price: r.price, duration: r.duration, icon: r.icon, color: r.color, category: r.category }; } },
+      "barbershop:clients": { table: "clients", toRow: function(d) { return { name: d.name, phone: d.phone, instagram: d.instagram || "", notes: d.notes || "" }; }, fromRow: function(r) { return { id: r.id, name: r.name, phone: r.phone, instagram: r.instagram, notes: r.notes }; } },
+      "barbershop:appointments": { table: "appointments", toRow: function(d) { return { client_id: d.clientId, barber_id: d.barberId, service_id: d.serviceId, date: d.date, time: d.time, duration: d.duration || 30, status: d.status || "pending", pay_method: d.payMethod || null }; }, fromRow: function(r) { return { id: r.id, clientId: r.client_id, barberId: r.barber_id, serviceId: r.service_id, date: r.date, time: r.time, duration: r.duration, status: r.status, payMethod: r.pay_method }; } },
+      "barbershop:quickServices": { table: "quick_services", toRow: function(d) { return { name: d.name, price: d.price, barber_id: d.barberId || null, barber_name: d.barberName || "", date: d.date, time: d.time || "" }; }, fromRow: function(r) { return { id: r.id, name: r.name, price: r.price, barberId: r.barber_id, barberName: r.barber_name, date: r.date, time: r.time }; } },
+      "barbershop:products": { table: "products", toRow: function(d) { return { name: d.name, price: d.price, category: d.category || "bebidas", icon: d.icon || "" }; }, fromRow: function(r) { return { id: r.id, name: r.name, price: r.price, category: r.category, icon: r.icon }; } },
+      "barbershop:sales": { table: "sales", toRow: function(d) { return { product_id: d.productId || null, product_name: d.productName, price: d.price, total: d.total || d.price, qty: d.qty || 1, date: d.date, time: d.time || "" }; }, fromRow: function(r) { return { id: r.id, productId: r.product_id, productName: r.product_name, price: r.price, total: r.total, qty: r.qty, date: r.date, time: r.time }; } },
     };
 
-    // Global state for current shop
-    let currentShopId = null;
+    var currentShopId = null;
 
-    // ═══ SUPABASE STORAGE ADAPTER ═══
-    // Implements the same window.storage interface the app expects
     window.storage = {
-      async get(key) {
+      get: async function(key) {
         if (!currentShopId) return null;
-        const mapping = TABLE_MAP[key];
+        var mapping = TABLE_MAP[key];
         if (!mapping) {
-          // Settings stored in shops table
           if (key === "barbershop:settings") {
-            const { data } = await supabase.from("shops").select("name, theme, settings").eq("id", currentShopId).single();
-            if (data) {
-              const val = JSON.stringify({ shopName: data.name || "", theme: data.theme || "gold", ...data.settings });
-              return { key, value: val };
+            var res = await supabase.from("shops").select("name, theme, settings").eq("id", currentShopId).single();
+            if (res.data) {
+              var val = JSON.stringify({ shopName: res.data.name || "", theme: res.data.theme || "gold" });
+              return { key: key, value: val };
             }
             return null;
           }
           return null;
         }
-        const { data, error } = await supabase.from(mapping.table).select("*").eq("shop_id", currentShopId);
-        if (error || !data) return null;
-        return { key, value: JSON.stringify(data.map(mapping.fromRow)) };
+        var result = await supabase.from(mapping.table).select("*").eq("shop_id", currentShopId);
+        if (result.error || !result.data) return null;
+        return { key: key, value: JSON.stringify(result.data.map(mapping.fromRow)) };
       },
-      async set(key, value) {
+      set: async function(key, value) {
         if (!currentShopId) return null;
-        const mapping = TABLE_MAP[key];
+        var mapping = TABLE_MAP[key];
         if (!mapping) {
           if (key === "barbershop:settings") {
             try {
-              const settings = JSON.parse(value);
-              await supabase.from("shops").update({ name: settings.shopName || "Mi Barbería", theme: settings.theme || "gold", settings: settings }).eq("id", currentShopId);
-              return { key, value };
-            } catch { return null; }
+              var settings = JSON.parse(value);
+              await supabase.from("shops").update({ name: settings.shopName || "Mi Barberia", theme: settings.theme || "gold", settings: settings }).eq("id", currentShopId);
+              return { key: key, value: value };
+            } catch(e) { return null; }
           }
           return null;
         }
-        // Strategy: delete all + re-insert (simple, works for our data sizes)
         try {
-          const items = JSON.parse(value);
+          var items = JSON.parse(value);
           await supabase.from(mapping.table).delete().eq("shop_id", currentShopId);
           if (items.length > 0) {
-            const rows = items.map(item => {
-              const row = mapping.toRow(item);
+            var rows = items.map(function(item) {
+              var row = mapping.toRow(item);
               row.shop_id = currentShopId;
-              // Preserve original ID if it's a UUID, otherwise let Supabase generate
               if (item.id && item.id.length > 10) row.id = item.id;
               return row;
             });
-            const { error } = await supabase.from(mapping.table).insert(rows);
-            if (error) { console.error("Insert error:", mapping.table, error); return null; }
+            var res = await supabase.from(mapping.table).insert(rows);
+            if (res.error) { console.error("Insert error:", mapping.table, res.error); return null; }
           }
-          return { key, value };
+          return { key: key, value: value };
         } catch(e) { console.error("Save error:", e); return null; }
       },
-      async delete(key) {
+      delete: async function(key) {
         if (!currentShopId) return null;
-        const mapping = TABLE_MAP[key];
-        if (mapping) {
-          await supabase.from(mapping.table).delete().eq("shop_id", currentShopId);
-        }
-        if (key === "barbershop:settings") {
-          await supabase.from("shops").update({ name: "Mi Barbería", theme: "gold", settings: {} }).eq("id", currentShopId);
-        }
-        return { key, deleted: true };
+        var mapping = TABLE_MAP[key];
+        if (mapping) { await supabase.from(mapping.table).delete().eq("shop_id", currentShopId); }
+        if (key === "barbershop:settings") { await supabase.from("shops").update({ name: "Mi Barberia", theme: "gold", settings: {} }).eq("id", currentShopId); }
+        return { key: key, deleted: true };
       }
     };
 
-    // Service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
   </script>
 
   <script type="text/babel" data-type="module">
     const { useState, useEffect, useCallback, useRef } = React;
 
-    // ═══ AUTH WRAPPER ═══
     function AuthWrapper() {
       const [session, setSession] = useState(null);
       const [loading, setLoading] = useState(true);
-      const [authMode, setAuthMode] = useState("login"); // login | register
+      const [authMode, setAuthMode] = useState("login");
       const [email, setEmail] = useState("");
       const [password, setPassword] = useState("");
       const [error, setError] = useState("");
@@ -146,7 +128,7 @@
         if (data) { currentShopId = data.id; }
       }
 
-      async function handleAuth(e) {
+      async function handleAuth() {
         setError(""); setSubmitting(true);
         try {
           if (authMode === "register") {
@@ -159,9 +141,9 @@
         } catch (err) {
           setError(
             err.message === "Invalid login credentials" ? "Email o contraseña incorrectos" :
-            err.message?.includes("already registered") ? "Este email ya está registrado" :
+            err.message?.includes("already registered") ? "Este email ya esta registrado" :
             err.message?.includes("least 6") ? "La contraseña debe tener al menos 6 caracteres" :
-            err.message?.includes("valid email") ? "Ingresá un email válido" :
+            err.message?.includes("valid email") ? "Ingresa un email valido" :
             err.message || "Error al procesar"
           );
         }
@@ -178,35 +160,28 @@
         return (
           <div style={{ minHeight: "100vh", background: "#0F0C08", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
             <div style={{ fontSize: 48 }}>💈</div>
-            <div style={{ color: "#D4A053", fontFamily: "'Playfair Display',serif", fontSize: 26, animation: "pulse 1.5s infinite" }}>BarberShop</div>
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap');@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
+            <div style={{ color: "#D4A053", fontFamily: "serif", fontSize: 26 }}>Cargando...</div>
           </div>
         );
       }
 
       if (!session) {
         return (
-          <div style={{ minHeight: "100vh", background: "#0F0C08", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans',sans-serif" }}>
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-              @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-              @keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+          <div style={{ minHeight: "100vh", background: "#0F0C08", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
+            <style>{`
+              @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
               @keyframes glow{0%,100%{box-shadow:0 0 15px rgba(212,160,83,0.1)}50%{box-shadow:0 0 30px rgba(212,160,83,0.25)}}
-              .auth-input{width:100%;padding:14px 18px;border-radius:14px;border:1px solid rgba(212,160,83,0.2);background:rgba(255,255,255,0.04);color:#F5F0E8;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box;transition:border-color 0.2s,box-shadow 0.2s;backdrop-filter:blur(4px)}
+              .auth-input{width:100%;padding:14px 18px;border-radius:14px;border:1px solid rgba(212,160,83,0.2);background:rgba(255,255,255,0.04);color:#F5F0E8;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box}
               .auth-input:focus{border-color:rgba(212,160,83,0.5);box-shadow:0 0 0 3px rgba(212,160,83,0.1)}
-              .auth-input::placeholder{color:#8A807088}
-              select option{background:#fff;color:#1A1A1A}
+              .auth-input::placeholder{color:rgba(138,128,112,0.5)}
             `}</style>
-            <div style={{ width: "min(400px, 90vw)", animation: "scaleIn .4s ease", padding: 20 }}>
-              {/* Logo */}
+            <div style={{ width: "min(400px, 90vw)", padding: 20 }}>
               <div style={{ textAlign: "center", marginBottom: 36 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg,#D4A053,#C17B4A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 14px", animation: "glow 3s infinite", boxShadow: "0 8px 30px rgba(212,160,83,0.25)" }}>💈</div>
-                <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 30, fontWeight: 700, color: "#D4A053", margin: "0 0 4px" }}>BarberShop</h1>
-                <p style={{ color: "#8A8070", fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase" }}>Sistema de Gestión</p>
+                <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg,#D4A053,#C17B4A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 14px", animation: "glow 3s infinite" }}>💈</div>
+                <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 30, color: "#D4A053", margin: "0 0 4px" }}>BarberShop</h1>
+                <p style={{ color: "#8A8070", fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase" }}>Sistema de Gestion</p>
               </div>
-
-              {/* Auth card */}
-              <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 20, padding: "32px 28px", border: "1px solid rgba(212,160,83,0.1)", backdropFilter: "blur(12px)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
-                {/* Tabs */}
+              <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 20, padding: "32px 28px", border: "1px solid rgba(212,160,83,0.1)" }}>
                 <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
                   {["login", "register"].map(mode => (
                     <button key={mode} onClick={() => { setAuthMode(mode); setError(""); }} style={{
@@ -214,57 +189,37 @@
                       background: authMode === mode ? "linear-gradient(135deg,#D4A053,#C17B4A)" : "rgba(255,255,255,0.04)",
                       color: authMode === mode ? "#0F0C08" : "#8A8070",
                       fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: authMode === mode ? 700 : 500,
-                      cursor: "pointer", transition: "all .25s",
-                      boxShadow: authMode === mode ? "0 4px 12px rgba(212,160,83,0.3)" : "none",
-                    }}>{mode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}</button>
+                      cursor: "pointer",
+                    }}>{mode === "login" ? "Iniciar Sesion" : "Crear Cuenta"}</button>
                   ))}
                 </div>
-
-                {/* Form */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div>
-                    <label style={{ display: "block", marginBottom: 6, fontSize: 12, color: "#8A8070", letterSpacing: "0.05em", textTransform: "uppercase" }}>Email</label>
-                    <input className="auth-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com"
-                      onKeyDown={e => { if (e.key === "Enter") handleAuth(); }} />
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 12, color: "#8A8070", textTransform: "uppercase" }}>Email</label>
+                    <input className="auth-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" onKeyDown={e => { if (e.key === "Enter") handleAuth(); }} />
                   </div>
                   <div>
-                    <label style={{ display: "block", marginBottom: 6, fontSize: 12, color: "#8A8070", letterSpacing: "0.05em", textTransform: "uppercase" }}>Contraseña</label>
-                    <input className="auth-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={authMode === "register" ? "Mínimo 6 caracteres" : "Tu contraseña"}
-                      onKeyDown={e => { if (e.key === "Enter") handleAuth(); }} />
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 12, color: "#8A8070", textTransform: "uppercase" }}>Contraseña</label>
+                    <input className="auth-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={authMode === "register" ? "Minimo 6 caracteres" : "Tu contraseña"} onKeyDown={e => { if (e.key === "Enter") handleAuth(); }} />
                   </div>
-
-                  {error && (
-                    <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(193,112,112,0.1)", border: "1px solid rgba(193,112,112,0.2)", fontSize: 13, color: "#C17070", animation: "fadeIn .3s ease" }}>
-                      ⚠ {error}
-                    </div>
-                  )}
-
+                  {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(193,112,112,0.1)", border: "1px solid rgba(193,112,112,0.2)", fontSize: 13, color: "#C17070" }}>⚠ {error}</div>}
                   <button onClick={handleAuth} disabled={submitting} style={{
                     width: "100%", padding: "15px", borderRadius: 14, border: "none",
                     background: submitting ? "#8A8070" : "linear-gradient(135deg,#D4A053,#C17B4A)",
                     color: "#0F0C08", fontFamily: "'DM Sans',sans-serif", fontSize: 16, fontWeight: 700,
-                    cursor: submitting ? "default" : "pointer", letterSpacing: "0.02em",
-                    boxShadow: "0 4px 20px rgba(212,160,83,0.3)", transition: "all .2s",
-                    opacity: submitting ? 0.7 : 1,
+                    cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
                   }}>{submitting ? "Procesando..." : authMode === "login" ? "Ingresar" : "Crear Cuenta"}</button>
                 </div>
-
-                {authMode === "register" && (
-                  <p style={{ color: "#8A8070", fontSize: 12, textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
-                    Al crear una cuenta obtenés 14 días de prueba gratis
-                  </p>
-                )}
+                {authMode === "register" && <p style={{ color: "#8A8070", fontSize: 12, textAlign: "center", marginTop: 16 }}>14 dias de prueba gratis</p>}
               </div>
             </div>
           </div>
         );
       }
 
-      // Authenticated - render main app
       return <BarberShopManager onLogout={handleLogout} userEmail={session.user.email} />;
     }
 
-    // ═══ MAIN APP ═══
 
 
 const SK = { barbers: "barbershop:barbers", services: "barbershop:services", clients: "barbershop:clients", appointments: "barbershop:appointments", settings: "barbershop:settings", products: "barbershop:products", sales: "barbershop:sales", quickServices: "barbershop:quickServices" };
@@ -551,7 +506,7 @@ function getTimeSection(time) {
 const sectionIcons = { "mañana": "🌅", "tarde": "☀️", "noche": "🌙" };
 
 // ═══════════════ MAIN ═══════════════
-function BarberShopManager({ onLogout, userEmail }) {
+function BarberShopManager({ onLogout, userEmail })() {
   const [tab, setTab] = useState("agenda");
   const [barbers, setBarbers] = useState(DEFAULT_BARBERS);
   const [services, setServices] = useState(DEFAULT_SERVICES);
@@ -799,7 +754,7 @@ function BarberShopManager({ onLogout, userEmail }) {
                 const dt = new Date(d + "T12:00:00"); const isTd = d === today(), isSel = d === selDate;
                 const ct = appointments.filter(a => a.date === d && a.status !== STATUS.cancelled).length;
                 return (
-                  <button key={d} className="dc" onClick={() => setSelDate(d)} style={{ padding: "8px 6px", borderRadius: 13, border: isTd && !isSel ? "1px solid `${T.accent}4D`" : "1px solid transparent", background: isSel ? `linear-gradient(135deg,${T.accent},${T.accentAlt})` : "rgba(255,255,255,0.04)", color: isSel ? T.bg : isTd ? T.accent : T.muted, cursor: "pointer", textAlign: "center", animation: `scaleIn .25s ease ${i * 0.02}s both`, boxShadow: isSel ? `0 4px 15px ${T.accent}4D` : "none", backdropFilter: "blur(4px)" }}>
+                  <button key={d} className="dc" onClick={() => setSelDate(d)} style={{ padding: "8px 6px", borderRadius: 13, border: isTd && !isSel ? `1px solid ${T.accent}4D` : "1px solid transparent", background: isSel ? `linear-gradient(135deg,${T.accent},${T.accentAlt})` : "rgba(255,255,255,0.04)", color: isSel ? T.bg : isTd ? T.accent : T.muted, cursor: "pointer", textAlign: "center", animation: `scaleIn .25s ease ${i * 0.02}s both`, boxShadow: isSel ? `0 4px 15px ${T.accent}4D` : "none", backdropFilter: "blur(4px)" }}>
                     <div style={{ fontSize: 9, textTransform: "uppercase", opacity: 0.7 }}>{dt.toLocaleDateString("es-AR", { weekday: "short" })}</div>
                     <div style={{ fontSize: 19, fontWeight: 700 }}>{dt.getDate()}</div>
                     {ct > 0 && <div style={{ width: 5, height: 5, borderRadius: "50%", background: isSel ? T.bg : T.accent, margin: "3px auto 0", opacity: 0.7 }} />}
@@ -832,7 +787,7 @@ function BarberShopManager({ onLogout, userEmail }) {
               </button>
             </div>
             {dayAppts.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "50px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 18, border: "1px dashed `${T.accent}26`", backdropFilter: "blur(4px)" }}>
+              <div style={{ textAlign: "center", padding: "50px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 18, border: `1px dashed ${T.accent}26`, backdropFilter: "blur(4px)" }}>
                 <div style={{ fontSize: 44, marginBottom: 10, animation: "float 4s ease-in-out infinite" }}>📅</div>
                 <div style={{ color: T.muted, fontSize: 14 }}>No hay turnos para {fmtDate(selDate)}</div>
               </div>
@@ -985,10 +940,10 @@ function BarberShopManager({ onLogout, userEmail }) {
           <div style={{ animation: "tabSlide .35s ease" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, color: T.accent }}>Barberos</h2>
-              <button className="bh" onClick={() => setModal({ type: "barber" })} style={{ padding: "9px 18px", borderRadius: 11, border: "none", background: `linear-gradient(135deg,${T.accent},${T.accentAlt})`, color: T.bg, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px `${T.accent}4D`" }}>+ Agregar</button>
+              <button className="bh" onClick={() => setModal({ type: "barber" })} style={{ padding: "9px 18px", borderRadius: 11, border: "none", background: `linear-gradient(135deg,${T.accent},${T.accentAlt})`, color: T.bg, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 12px ${T.accent}4D` }}>+ Agregar</button>
             </div>
             {barbers.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "50px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 18, border: "1px dashed `${T.accent}26`" }}>
+              <div style={{ textAlign: "center", padding: "50px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 18, border: `1px dashed ${T.accent}26` }}>
                 <div style={{ fontSize: 44, marginBottom: 10, animation: "float 4s ease-in-out infinite" }}>💈</div>
                 <div style={{ color: T.muted, fontSize: 14 }}>No hay barberos</div>
               </div>
@@ -1068,7 +1023,7 @@ function BarberShopManager({ onLogout, userEmail }) {
           <div style={{ animation: "tabSlide .35s ease" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, color: T.accent }}>Servicios & Precios</h2>
-              <button className="bh" onClick={() => setModal({ type: "service", data: null })} style={{ padding: "9px 18px", borderRadius: 11, border: "none", background: `linear-gradient(135deg,${T.accent},${T.accentAlt})`, color: T.bg, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px `${T.accent}4D`" }}>+ Nuevo</button>
+              <button className="bh" onClick={() => setModal({ type: "service", data: null })} style={{ padding: "9px 18px", borderRadius: 11, border: "none", background: `linear-gradient(135deg,${T.accent},${T.accentAlt})`, color: T.bg, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 12px ${T.accent}4D` }}>+ Nuevo</button>
             </div>
 
             {/* Quick Access - Popular */}
@@ -1123,13 +1078,13 @@ function BarberShopManager({ onLogout, userEmail }) {
           <div style={{ animation: "tabSlide .35s ease" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, color: T.accent }}>Clientes</h2>
-              <button className="bh" onClick={() => setModal({ type: "client" })} style={{ padding: "9px 18px", borderRadius: 11, border: "none", background: `linear-gradient(135deg,${T.accent},${T.accentAlt})`, color: T.bg, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px `${T.accent}4D`" }}>+ Nuevo</button>
+              <button className="bh" onClick={() => setModal({ type: "client" })} style={{ padding: "9px 18px", borderRadius: 11, border: "none", background: `linear-gradient(135deg,${T.accent},${T.accentAlt})`, color: T.bg, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 12px ${T.accent}4D` }}>+ Nuevo</button>
             </div>
             <div style={{ position: "relative", marginBottom: 16 }}>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Buscar por nombre, teléfono o Instagram..." style={inputStyle} />
             </div>
             {filteredClients.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "50px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 18, border: "1px dashed `${T.accent}26`" }}>
+              <div style={{ textAlign: "center", padding: "50px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 18, border: `1px dashed ${T.accent}26` }}>
                 <div style={{ fontSize: 44, marginBottom: 10, animation: "float 4s ease-in-out infinite" }}>👥</div>
                 <div style={{ color: T.muted, fontSize: 14 }}>{search ? "Sin resultados" : "No hay clientes"}</div>
               </div>
@@ -1620,15 +1575,6 @@ function BarberShopManager({ onLogout, userEmail }) {
               </button>
             </div>
             <div style={{ fontSize: 10, color: T.muted, marginTop: 4 }}>Exportá tus datos como archivo JSON. Restaurá desde un backup previo.</div>
-          </div>
-
-          {/* Account */}
-          <div>
-            <label style={labelStyle}>Cuenta</label>
-            {userEmail && <div style={{ fontSize: 12, color: T.muted, marginBottom: 8 }}>📧 {userEmail}</div>}
-            <button onClick={() => { if (onLogout) onLogout(); setModal(null); }} style={{ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid ${T.accent}33`, background: "transparent", color: T.accent, fontFamily: "'DM Sans',sans-serif", fontSize: 13, cursor: "pointer" }}>
-              🚪 Cerrar Sesión
-            </button>
           </div>
 
           {/* 15. Reset all data */}
@@ -2265,7 +2211,7 @@ function BarberForm({ T, barbers, barber, onSave }) {
           specialties, color, avatarId, blockedHours: blockedHours.trim(),
           avatar: name.trim().charAt(0).toUpperCase(),
         });
-      }} style={{ ...btnPrimary, boxShadow: "0 4px 20px `${T.accent}4D`" }}>{isEdit ? "Guardar Cambios" : "Agregar Barbero"}</button>
+      }} style={{ ...btnPrimary, boxShadow: `0 4px 20px ${T.accent}4D` }}>{isEdit ? "Guardar Cambios" : "Agregar Barbero"}</button>
     </div>
   );
 }
@@ -2308,7 +2254,7 @@ function ServiceForm({ T, service, onSave, onDelete }) {
       <div>
         <label style={labelStyle}>Icono</label>
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {icons.map(ic => (<button key={ic} onClick={() => setIcon(ic)} style={{ width: 34, height: 34, borderRadius: 8, border: icon === ic ? `2px solid ${_T.accent}` : "2px solid transparent", background: icon === ic ? `${T.accent}26` : "rgba(255,255,255,0.04)", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", boxShadow: icon === ic ? "0 0 12px `${T.accent}26`" : "none" }}>{ic}</button>))}
+          {icons.map(ic => (<button key={ic} onClick={() => setIcon(ic)} style={{ width: 34, height: 34, borderRadius: 8, border: icon === ic ? `2px solid ${_T.accent}` : "2px solid transparent", background: icon === ic ? `${T.accent}26` : "rgba(255,255,255,0.04)", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", boxShadow: icon === ic ? `0 0 12px ${T.accent}26` : "none" }}>{ic}</button>))}
         </div>
       </div>
       <div>
@@ -2322,7 +2268,7 @@ function ServiceForm({ T, service, onSave, onDelete }) {
         const e = validate(); if (e) { setErr(e); return; }
         setSaving(true);
         onSave({ id: service?.id || uid(), name: name.trim(), price: Math.max(0, price), duration: Math.max(1, duration), icon, color, category });
-      }} style={{ ...btnPrimary, boxShadow: "0 4px 20px `${T.accent}4D`" }}>{service ? "Guardar Cambios" : "Crear Servicio"}</button>
+      }} style={{ ...btnPrimary, boxShadow: `0 4px 20px ${T.accent}4D` }}>{service ? "Guardar Cambios" : "Crear Servicio"}</button>
       {onDelete && (<button onClick={onDelete} style={{ width: "100%", padding: "11px", borderRadius: 12, border: "1px solid rgba(139,58,58,0.25)", background: "rgba(139,58,58,0.08)", color: "#C17070", fontFamily: "'DM Sans',sans-serif", fontSize: 13, cursor: "pointer", transition: "all .2s" }}>Eliminar Servicio</button>)}
     </div>
   );
@@ -2364,7 +2310,7 @@ function ClientForm({ T, clients, client, onSave }) {
         const e = validate(); if (e) { setErr(e); return; }
         setSaving(true);
         onSave({ id: client?.id || uid(), name: name.trim(), phone: phone.trim(), instagram: instagram.trim(), notes: notes.trim() });
-      }} style={{ ...btnPrimary, boxShadow: "0 4px 20px `${T.accent}4D`" }}>{isEdit ? "Guardar Cambios" : "Agregar Cliente"}</button>
+      }} style={{ ...btnPrimary, boxShadow: `0 4px 20px ${T.accent}4D` }}>{isEdit ? "Guardar Cambios" : "Agregar Cliente"}</button>
     </div>
   );
 }
@@ -2524,7 +2470,6 @@ function EditQuickServiceForm({ T, qs, onSave }) {
 }
 
 
-    // Mount
     const root = ReactDOM.createRoot(document.getElementById("root"));
     root.render(React.createElement(AuthWrapper));
   </script>
