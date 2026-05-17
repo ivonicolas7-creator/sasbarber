@@ -24,7 +24,7 @@
   <script>
     const SUPABASE_URL = "https://wjcmchauuweuivawwvzu.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqY21jaGF1dXdldWl2YXd3dnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyODI0MjUsImV4cCI6MjA5Mzg1ODQyNX0.nUdb7g46RsrYHVhxRhqtDfLPmxf7jm709eszOif5NbM";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const TABLE_MAP = {
       "barbershop:barbers": { table: "barbers", toRow: function(d) { return { name: d.name, phone: d.phone || "", instagram: d.instagram || "", color: d.color || "#D4A053", avatar: d.avatar || "", avatar_id: d.avatarId || "", schedule: d.schedule || "", blocked_hours: d.blockedHours || "", commission: d.commission || 0, specialties: d.specialties || [] }; }, fromRow: function(r) { return { id: r.id, name: r.name, phone: r.phone, instagram: r.instagram, color: r.color, avatar: r.avatar, avatarId: r.avatar_id, schedule: r.schedule, blockedHours: r.blocked_hours, commission: r.commission, specialties: r.specialties || [] }; } },
@@ -44,7 +44,7 @@
         var mapping = TABLE_MAP[key];
         if (!mapping) {
           if (key === "barbershop:settings") {
-            var res = await supabase.from("shops").select("name, theme, settings").eq("id", currentShopId).single();
+            var res = await sbClient.from("shops").select("name, theme, settings").eq("id", currentShopId).single();
             if (res.data) {
               var val = JSON.stringify({ shopName: res.data.name || "", theme: res.data.theme || "gold" });
               return { key: key, value: val };
@@ -53,7 +53,7 @@
           }
           return null;
         }
-        var result = await supabase.from(mapping.table).select("*").eq("shop_id", currentShopId);
+        var result = await sbClient.from(mapping.table).select("*").eq("shop_id", currentShopId);
         if (result.error || !result.data) return null;
         return { key: key, value: JSON.stringify(result.data.map(mapping.fromRow)) };
       },
@@ -64,7 +64,7 @@
           if (key === "barbershop:settings") {
             try {
               var settings = JSON.parse(value);
-              await supabase.from("shops").update({ name: settings.shopName || "Mi Barberia", theme: settings.theme || "gold", settings: settings }).eq("id", currentShopId);
+              await sbClient.from("shops").update({ name: settings.shopName || "Mi Barberia", theme: settings.theme || "gold", settings: settings }).eq("id", currentShopId);
               return { key: key, value: value };
             } catch(e) { return null; }
           }
@@ -72,7 +72,7 @@
         }
         try {
           var items = JSON.parse(value);
-          await supabase.from(mapping.table).delete().eq("shop_id", currentShopId);
+          await sbClient.from(mapping.table).delete().eq("shop_id", currentShopId);
           if (items.length > 0) {
             var rows = items.map(function(item) {
               var row = mapping.toRow(item);
@@ -80,7 +80,7 @@
               if (item.id && item.id.length > 10) row.id = item.id;
               return row;
             });
-            var res = await supabase.from(mapping.table).insert(rows);
+            var res = await sbClient.from(mapping.table).insert(rows);
             if (res.error) { console.error("Insert error:", mapping.table, res.error); return null; }
           }
           return { key: key, value: value };
@@ -89,8 +89,8 @@
       delete: async function(key) {
         if (!currentShopId) return null;
         var mapping = TABLE_MAP[key];
-        if (mapping) { await supabase.from(mapping.table).delete().eq("shop_id", currentShopId); }
-        if (key === "barbershop:settings") { await supabase.from("shops").update({ name: "Mi Barberia", theme: "gold", settings: {} }).eq("id", currentShopId); }
+        if (mapping) { await sbClient.from(mapping.table).delete().eq("shop_id", currentShopId); }
+        if (key === "barbershop:settings") { await sbClient.from("shops").update({ name: "Mi Barberia", theme: "gold", settings: {} }).eq("id", currentShopId); }
         return { key: key, deleted: true };
       }
     };
@@ -111,12 +111,12 @@
       const [submitting, setSubmitting] = useState(false);
 
       useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        sbClient.auth.getSession().then(({ data: { session } }) => {
           setSession(session);
           if (session) initShop(session.user.id);
           setLoading(false);
         });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = sbClient.auth.onAuthStateChange((_event, session) => {
           setSession(session);
           if (session) initShop(session.user.id);
         });
@@ -124,7 +124,7 @@
       }, []);
 
       async function initShop(userId) {
-        const { data } = await supabase.from("shops").select("id").eq("owner_id", userId).limit(1).single();
+        const { data } = await sbClient.from("shops").select("id").eq("owner_id", userId).limit(1).single();
         if (data) { currentShopId = data.id; }
       }
 
@@ -132,10 +132,10 @@
         setError(""); setSubmitting(true);
         try {
           if (authMode === "register") {
-            const { error } = await supabase.auth.signUp({ email, password });
+            const { error } = await sbClient.auth.signUp({ email, password });
             if (error) throw error;
           } else {
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await sbClient.auth.signInWithPassword({ email, password });
             if (error) throw error;
           }
         } catch (err) {
@@ -151,7 +151,7 @@
       }
 
       async function handleLogout() {
-        await supabase.auth.signOut();
+        await sbClient.auth.signOut();
         currentShopId = null;
         setSession(null);
       }
@@ -506,7 +506,7 @@ function getTimeSection(time) {
 const sectionIcons = { "mañana": "🌅", "tarde": "☀️", "noche": "🌙" };
 
 // ═══════════════ MAIN ═══════════════
-function BarberShopManager({ onLogout, userEmail })() {
+function BarberShopManager({ onLogout, userEmail }) {
   const [tab, setTab] = useState("agenda");
   const [barbers, setBarbers] = useState(DEFAULT_BARBERS);
   const [services, setServices] = useState(DEFAULT_SERVICES);
